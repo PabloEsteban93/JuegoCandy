@@ -276,4 +276,127 @@ function permitirEventosCandy() {
 	
 }
 
+function restrictorMovimientoCandy(event, candyDrag) {
+	candyDrag.position.top = Math.min(100, candyDrag.position.top);
+	candyDrag.position.bottom = Math.min(100, candyDrag.position.bottom);
+	candyDrag.position.left = Math.min(100, candyDrag.position.left);
+	candyDrag.position.right = Math.min(100, candyDrag.position.right);
+}
+
+function intercambiarCandy(event, candyDrag) {
+	var candyDrag = $(candyDrag.draggable);
+	var dragSrc = candyDrag.attr('src');
+	var candyDrop = $(this);
+	var dropSrc = candyDrop.attr('src');
+	candyDrag.attr('src', dropSrc);
+	candyDrop.attr('src', dragSrc);
+
+	setTimeout(function() {
+		tableroJuego();
+		if($('img.delete').length === 0) {
+			candyDrag.attr('src', dragSrc);
+			candyDrop.attr('src', dropSrc);
+		} else{
+			actualizarMovimientos();
+		}
+	}, 500);
+}
+
+function checkBoardPromise(result) {
+	if (result) {
+		tableroJuego();
+	}
+}
+function actualizarMovimientos() {
+	var valorActual = Number($('#movimientos-text').text());
+	var result = valorActual += 1;
+	$('#movimientos-text').text(result);
+}
+
+function eliminarAnimacionCandy() {
+	bloquearEventosCandy();
+	$('img.delete').effect('pulsate', 400);
+	$('img.delete').animate({
+		opacity: '0'
+	}, {
+		duration: 300
+	})
+	.animate({
+		opacity: '0'
+	}, {
+		duration: 400,
+		complete: function () {
+			eliminarCandy()
+				.then(checkBoardPromise)
+				.catch(showPromiseError);
+			},
+			queue: true
+		});
+}
+
+function showPromiseError(error) {
+	console.log(error);
+}
+
+function eliminarCandy() {
+	return new Promise(function (resolve, reject) {
+		if ($('img.delete').remove()) {
+			resolve(true);
+		} else{
+			reject('No se pudo eliminar Candy...');
+		}
+	});
+}
+
+function finJuego() {
+	
+	$('div.panel-tablero, div.time').effect('fold');
+	$('h1.main-titulo').addClass('titulo-over')
+		.html('Gracias por jugar!<br><br>Juego Terminado!!');
+	
+	$('div.score, div.moves, div.panel-score').width('100%');
+	clearInterval(counter);
+}
+
+function iniciarJuego() {
+
+	colorTitulo('h1.main-titulo');
+
+	$('.btn-reinicio').click(function () {
+		if($(this).text() === 'Reiniciar') {
+			location.reload(true);
+		}
+		tableroJuego();
+		$(this).text('Reiniciar');
+		startTimer();
+	});
+}
+function startTimer() {
+
+	var tiempo = $('#timer').text();
+	var timeArray = tiempo.split(/[:]+/);
+	var m = timeArray[0];
+	var s = checkSecond((timeArray[1] - 1));
+	if(s==59){m=m-1
+	}
+	if(m<0){
+		finJuego();
+		
+	};
+	$('#timer').html( m + ":" + s);
+	var counter = setTimeout(startTimer, 1000);
+
+
+}
+function checkSecond(sec) {
+  if (sec < 10 && sec >= 0) {sec = "0" + sec}; // add zero in front of numbers < 10
+  if (sec < 0) {sec = "59"};
+  return sec;
+}
+
+
+
+$(function () {
+	iniciarJuego();
+});
 
